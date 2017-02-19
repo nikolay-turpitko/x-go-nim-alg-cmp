@@ -2,11 +2,12 @@
 
 # Script plots graphs for all *.dat files in the folder.
 # It produces one *.pdf file for every input file.
-# Usage: plot-all <work-dir>
+# Usage: plot-all <work-dir> <output-file-format>
+# Output format could be "pdf", "svg", "jpeg", "png".
 
 curdir="$(dirname "$(readlink -f "$BASH_SOURCE[0]")")" > /dev/null
 
 for f in $1/*.dat
 do
-    gnuplot -c "$curdir/plot.gp" "$f" "${f%.dat}.pdf"
+    gnuplot -c "$curdir/plot.gp" "${f%.dat}" "$2"
 done

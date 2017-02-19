@@ -21,3 +21,5 @@ __Note__: to use plot scripts benchmarks should be coded with simple conventions
         BenchmarkFib/SimpleFibNim#4-8             	10000000	       192 ns/op
         BenchmarkFib/SimpleFibGo#4-8              	100000000	        12.5 ns/op
 
+__Note__: file type for plot (default is `svg`) could be passed via `make` argument like `make plot-type=png`.
+Possible values are `svg`, `pdf`, `jpeg`, `png` (see gnuplot manual for full list).
