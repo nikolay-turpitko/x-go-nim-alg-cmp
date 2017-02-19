@@ -23,4 +23,4 @@ __Note__: to use plot scripts benchmarks should be coded with simple conventions
         BenchmarkFib/SimpleFibGo#4-8              	100000000	        12.5 ns/op
 
 __Note__: file type for plot (default is `svg`) could be passed via `make` argument like `make plot-type=png`.
-Possible values are `svg`, `pdf`, `jpeg`, `png` (see gnuplot manual for full list).
+Possible values are `svg`, `pdf`, `jpeg`, `png` (see gnuplot manual for full list). If you have `Inkscape` installed, you may use command `inkview *.svg` to preview `svg` files. Also, you don't need to run all benchmarks again to draw plots in another format, because data files saved in `bench-out` folder. Just use command `./bench/plot-all ./bench-out jpeg`.
