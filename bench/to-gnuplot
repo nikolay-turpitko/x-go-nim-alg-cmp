@@ -1,0 +1,40 @@
+#!/usr/bin/gawk -E
+
+# This script converts output of `go test` to input of `gnuplot`.
+# Script creates one *.dat file per benchmark test.
+# Usage: go test -bench=. | to-gnuplot <out_dir>
+# Note: path should contain trailing slash.
+
+BEGIN {
+    if (ARGC < 2) {
+        print "usage: to-gnuplot <out_dir>" > "/dev/stderr"
+        exit 1
+    }
+    outpath = ARGV[1]
+    ARGC = 1
+}
+
+match($0, /^Benchmark(.+)\/(.+)#([[:digit:]]+)/, m) {
+    # Array of results r[test name][series][sample] = <avarage time per test execution>
+    r[m[1]][m[2]][m[3]] = $3
+}
+
+END {
+    PROCINFO["sorted_in"] = "@ind_str_asc"
+    for (tn in r) {
+        out = outpath tn ".dat"
+        print "#", tn  > out
+        print "" >> out
+        for (sn in r[tn]) {
+            print "#", sn >> out
+            print "N", sn >> out
+            PROCINFO["sorted_in"] = "@ind_num_asc"
+            for (n in r[tn][sn]) {
+                print n, r[tn][sn][n] >> out
+            }
+            PROCINFO["sorted_in"] = "@ind_str_asc"
+            print "" >> out
+            print "" >> out
+        }
+    }
+}

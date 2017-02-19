@@ -1,0 +1,42 @@
+#!/usr/bin/gawk -E
+
+# This script filters out selected series from gnuplot input data.
+# Script get data from stdin and output result to stdout.
+# Usage: cat orig.dat | remove-plots <name-to-remove-1> <name-to-remove-2> ...
+
+BEGIN {
+    if (ARGC < 2) {
+        print "usage: remove-plots <names-to-remove>" > "/dev/stderr"
+        exit 1
+    }
+    for (i = 1; i < ARGC; i++) {
+        ignored[ARGV[i]] = 1
+    }
+    ARGC = 1
+    state = "copy"
+}
+
+# Beginnig of series.
+match($0, /^# ([[:alnum:]]+)$/, m) {
+    if (state == "copy" && m[1] in ignored) {
+        state = "ignore"
+    } else if (state == "empty") {
+        state = "ignore"
+    }
+}
+
+# Every string.
+{
+    if (state == "copy") {
+        print
+    }
+}
+
+# Empty string.
+/^$/ {
+    if (state == "empty") {
+        state = "copy"
+    } else if (state == "ignore") {
+        state = "empty"
+    }
+}
