@@ -25,14 +25,3 @@ __Note__: to use plot scripts benchmarks should be coded with simple conventions
 __Note__: file type for plot (default is `svg`) could be passed via `make` argument like `make plot-type=png`.
 Possible values are `svg`, `pdf`, `jpeg`, `png` (see gnuplot manual for full list). If you have `Inkscape` installed, you may use command `inkview *.svg` to preview `svg` files. Also, you don't need to run all benchmarks again to draw plots in another format, because data files saved in `bench-out` folder. Just use command `./bench/plot-all ./bench-out jpeg`.
 
-
-TODO:
-- sorting algorithms, benchmark vs standard (try to use functional style and list comprehancion in Nim)
-- parallel or external sorting
-- graph traversal algorithm (use adj matrix and adj list)
-- path finding algorithm
-- https://blog.gopheracademy.com/advent-2015/glow-map-reduce-for-golang/
-- parallel matrix alg - multiplication, min path in graph, ...
-- 8 queens problem (recursive and las vegas)
-- max flow
-- traveling salesman (using ants approach)

@@ -2,10 +2,11 @@
 
 package main
 
-// #cgo CFLAGS: -I. -Inimcache -I/home/nick/Projects/Nim/lib
+// #cgo CFLAGS: -I. -Inimcache -I/shared/installed/Nim/lib
 // #cgo LDFLAGS: -L. -Lnimcache libnimalgs.a -ldl
 // #include <nimalgs.h>
 import "C"
+import "unsafe"
 
 func initNimRuntime() {
 	C.NimMain()
@@ -55,4 +56,17 @@ func nim_rec_gcd(a, b int) int {
 
 func nim_mem_gcd(a, b int) int {
 	return int(C.mem_gcd(C.int(a), C.int(b)))
+}
+
+// sort
+
+func nim_std_sort(a []int) {
+	b := make([]C.int, len(a))
+	for i, v := range a {
+		b[i] = C.int(v)
+	}
+	C.std_sort((*C.int)(unsafe.Pointer(&b[0])), C.NI(len(a)))
+	for i, v := range b {
+		a[i] = int(v)
+	}
 }

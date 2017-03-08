@@ -1,16 +1,34 @@
 package main
 
 import (
+	"math/rand"
+	"sort"
 	"testing"
 )
+
+// High order functions used to make runSubBench more generic.
+func numChk(exp int) func(b *testing.B, r interface{}) {
+	return func(b *testing.B, r interface{}) {
+		if exp != r.(int) {
+			b.Fatalf("Expected: %d, got: %d", exp, r)
+		}
+	}
+}
+
+// High order functions used to make runSubBench more generic.
+func wrapNumFunc(f func(int) int) func(interface{}) interface{} {
+	return func(a interface{}) interface{} {
+		return f(a.(int))
+	}
+}
 
 // This benchmark finds cost of Nim invocation.
 func BenchmarkSimplest(b *testing.B) {
 	exp := 42
 	for i := uint(0); i < 6; i++ {
 		n := 1 << i
-		runSubBench(b, "Nim", n, exp, nim_simplest)
-		runSubBench(b, "Go", n, exp, go_simplest)
+		runSubBench(b, "Nim", n, nil, wrapNumFunc(nim_simplest), numChk(exp))
+		runSubBench(b, "Go", n, nil, wrapNumFunc(go_simplest), numChk(exp))
 	}
 }
 
@@ -19,17 +37,17 @@ func BenchmarkFib(b *testing.B) {
 	for i := 0; i < len(exp); i++ {
 		n := 1 << uint(i)
 
-		runSubBench(b, "GoRec", n, exp[i], go_rec_fib)
-		runSubBench(b, "GoTailRec", n, exp[i], go_tail_rec_fib)
-		runSubBench(b, "GoIter", n, exp[i], go_iter_fib)
-		runSubBench(b, "GoMem", n, exp[i], go_mem_fib)
-		runSubBench(b, "GoTramp", n, exp[i], go_tramp_tail_rec_fib)
+		runSubBench(b, "GoRec", n, nil, wrapNumFunc(go_rec_fib), numChk(exp[i]))
+		runSubBench(b, "GoTailRec", n, nil, wrapNumFunc(go_tail_rec_fib), numChk(exp[i]))
+		runSubBench(b, "GoIter", n, nil, wrapNumFunc(go_iter_fib), numChk(exp[i]))
+		runSubBench(b, "GoMem", n, nil, wrapNumFunc(go_mem_fib), numChk(exp[i]))
+		runSubBench(b, "GoTramp", n, nil, wrapNumFunc(go_tramp_tail_rec_fib), numChk(exp[i]))
 
-		runSubBench(b, "NimRec", n, exp[i], nim_rec_fib)
-		runSubBench(b, "NimTailRec", n, exp[i], nim_tail_rec_fib)
-		runSubBench(b, "NimIter", n, exp[i], nim_iter_fib)
-		runSubBench(b, "NimMem", n, exp[i], nim_mem_fib)
-		//		runSubBench(b, "NimTramp", n, exp[i], nim_tramp_tail_rec_fib)
+		runSubBench(b, "NimRec", n, nil, wrapNumFunc(nim_rec_fib), numChk(exp[i]))
+		runSubBench(b, "NimTailRec", n, nil, wrapNumFunc(nim_tail_rec_fib), numChk(exp[i]))
+		runSubBench(b, "NimIter", n, nil, wrapNumFunc(nim_iter_fib), numChk(exp[i]))
+		runSubBench(b, "NimMem", n, nil, wrapNumFunc(nim_mem_fib), numChk(exp[i]))
+		//		runSubBench(b, "NimTramp", n, nil, wrapNumFunc(nim_tramp_tail_rec_fib), numChk(exp[i]))
 	}
 }
 
@@ -48,15 +66,65 @@ func BenchmarkGCD(b *testing.B) {
 		24: {121393, 75025, 1},
 		32: {2178309, 3524578, 1},
 	}
-	for n, _ := range t {
-		runSubBench(b, "GoIter", n, t[n].exp, func(n int) int { return go_iter_gcd(t[n].a, t[n].b) })
-		runSubBench(b, "GoIterSub", n, t[n].exp, func(n int) int { return go_iter_sub_gcd(t[n].a, t[n].b) })
-		runSubBench(b, "GoRec", n, t[n].exp, func(n int) int { return go_rec_gcd(t[n].a, t[n].b) })
-		runSubBench(b, "GoMem", n, t[n].exp, func(n int) int { return go_mem_gcd(t[n].a, t[n].b) })
 
-		runSubBench(b, "NimIter", n, t[n].exp, func(n int) int { return nim_iter_gcd(t[n].a, t[n].b) })
-		runSubBench(b, "NimIterSub", n, t[n].exp, func(n int) int { return nim_iter_sub_gcd(t[n].a, t[n].b) })
-		runSubBench(b, "NimRec", n, t[n].exp, func(n int) int { return nim_rec_gcd(t[n].a, t[n].b) })
-		runSubBench(b, "NimMem", n, t[n].exp, func(n int) int { return nim_mem_gcd(t[n].a, t[n].b) })
+	wrapGCD := func(f func(a int, b int) int) func(interface{}) interface{} {
+		return func(n interface{}) interface{} {
+			i := n.(int)
+			return f(t[i].a, t[i].b)
+		}
+	}
+
+	for n := range t {
+		runSubBench(b, "GoIter", n, nil, wrapGCD(go_iter_gcd), numChk(t[n].exp))
+		runSubBench(b, "GoIterSub", n, nil, wrapGCD(go_iter_sub_gcd), numChk(t[n].exp))
+		runSubBench(b, "GoRec", n, nil, wrapGCD(go_rec_gcd), numChk(t[n].exp))
+		runSubBench(b, "GoMem", n, nil, wrapGCD(go_mem_gcd), numChk(t[n].exp))
+
+		runSubBench(b, "NimIter", n, nil, wrapGCD(nim_iter_gcd), numChk(t[n].exp))
+		runSubBench(b, "NimIterSub", n, nil, wrapGCD(nim_iter_sub_gcd), numChk(t[n].exp))
+		runSubBench(b, "NimRec", n, nil, wrapGCD(nim_rec_gcd), numChk(t[n].exp))
+		runSubBench(b, "NimMem", n, nil, wrapGCD(nim_mem_gcd), numChk(t[n].exp))
+	}
+}
+
+// High order functions used to make runSubBench more generic.
+func sortChk(b *testing.B, r interface{}) {
+	b.StopTimer()
+	defer b.StartTimer()
+	if !sort.IntsAreSorted(r.([]int)) {
+		b.Fatalf("Expected sorted array, but got unsorted")
+	}
+}
+
+// High order functions used to make runSubBench more generic.
+func wrapSortFunc(f func([]int)) func(interface{}) interface{} {
+	return func(a interface{}) interface{} {
+		f(a.([]int))
+		return a
+	}
+}
+
+func BenchmarkSort(b *testing.B) {
+	const sz = 20
+	const maxsz = 1 << sz
+	a := make([]int, maxsz)
+	for i := 0; i < maxsz; i++ {
+		a[i] = rand.Int()
+	}
+	for i := uint(5); i < sz; i++ {
+		n := 1 << i
+		prepareSort := func(b *testing.B, n interface{}) interface{} {
+			b.StopTimer()
+			aa := make([]int, n.(int))
+			copy(aa, a)
+			b.StartTimer()
+			return aa
+		}
+		runSubBench(b, "GoStd", n, prepareSort, wrapSortFunc(go_std_sort), sortChk)
+		runSubBench(b, "GoNaivePar", n, prepareSort, wrapSortFunc(go_naive_par_sort), sortChk)
+		runSubBench(b, "GoHeap", n, prepareSort, wrapSortFunc(go_heap_sort), sortChk)
+
+		// Was not able to make it work.
+		//runSubBench(b, "NimStd", n, prepareSort, wrapSortFunc(nim_std_sort), sortChk)
 	}
 }
